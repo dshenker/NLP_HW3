@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>public/hw-lm/code/INSTRUCTIONS</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">public/hw-lm/code/INSTRUCTIONS</h1>
+</header>
+<p>Hooray, let’s kick it with some smoothed language models.</p>
+<h2 id="downloading-the-assignment-materials">Downloading the Assignment Materials</h2>
+<p>We assume that you’ve made a local copy of <a href="http://www.cs.jhu.edu/~jason/465/hw-lm/" class="uri">http://www.cs.jhu.edu/~jason/465/hw-lm/</a> (for example, by downloading and unpacking the zipfile there) and that you’re currently in the <code>code/</code> subdirectory.</p>
+<h2 id="environments-and-miniconda">Environments and Miniconda</h2>
+<p>You probably also want to install Miniconda, a minimal tool for managing and reproducing environments. It does the hard work of installing packages like NumPy that use faster, vectorized math compared to the standard Python int and float data types.</p>
+<p>Miniconda (and its big sibling Anaconda) are all the rage in NLP and deep learning. Install it following your platform- specific instructions from here:</p>
+<p><a href="https://conda.io/projects/conda/en/latest/user-guide/install/index.html" class="uri">https://conda.io/projects/conda/en/latest/user-guide/install/index.html</a></p>
+<p>One you’ve installed it, you can create an “environment” that matches the one on the autograder, so you instantly know whether your code will work there or not.</p>
+<pre><code>conda env create -f environment.yml</code></pre>
+<p>Now that you’ve cloned our environment (made it available for your use) from the .yml specification file, you can “activate” it.</p>
+<pre><code>conda activate hw-lm</code></pre>
+<p>If this worked, then your prompt should be prefixed by the environment name, like this:</p>
+<pre><code>(hw-lm) arya@ugradx:~/hw-lm/code$</code></pre>
+<p>This means that third-party packages like PyTorch are now available for you to “import” in your Python scripts. You are also, for sure, using the same Python version as we are.</p>
+<hr />
+<h2 id="question-1.">QUESTION 1.</h2>
+<p>We provide a script <code>./build_vocab.py</code> for you to build a vocabulary from some corpus. Type <code>./build_vocab.py --help</code> to see documentation. Once you’ve familiarized yourself with the arguments, try running it like this:</p>
+<pre><code>./build_vocab.py ../data/gen_spam/train/{gen,spam} --threshold 3 --output vocab-genspam.txt </code></pre>
+<p>This creates <code>vocab-genspam.txt</code>, which you can look at: it’s just a set of word types.</p>
+<p>Once you’ve built a vocab file, you can use it to build one or more smoothed language models. If you are <em>comparing</em> two models, both models should use the <em>same</em> vocab file, to make the probabilities comparable (as explained in the homework handout).</p>
+<p>We also provide a script <code>./train_lm.py</code> for you to build a smoothed language model from a vocab file and a corpus. (The code for actually training and using models is in the <code>probs.py</code> module, which you will extend later.)</p>
+<p>Type <code>./train_lm.py --help</code> to see documentation. Once you’ve familiarized yourself with the arguments, try running it like this:</p>
+<pre><code>./train_lm.py vocab-genspam.txt add_lambda --lambda 1.0 ../data/gen_spam/train/gen </code></pre>
+<p>Here <code>add_lambda</code> is the type of smoothing, and <code>--lambda</code> specifies the hyperparameter λ=1.0. While the documentation mentions additional hyperparameters like <code>--l2_regularization</code>, they are not used by the <code>add_lambda</code> smoothing technique, so specifying them will have no effect on it.</p>
+<p>Since the above command line doesn’t specify an <code>--output</code> file to save the model in, the script just makes up a long filename (ending in <code>.model</code>) that mentions the choice of hyperparameters. You may sometimes want to use shorter filenames, or specific filenames that are required by the submission instructions that we’ll post on Piazza.</p>
+<p>The file <code>corpus=gen~vocab=vocab-genspam.txt~smoother=add_lambda~lambda=1.0.model</code>. now contains a <a href="https://docs.python.org/3/library/pickle.html">pickled</a> copy of a trained Python <code>LanguageModel</code> object. The object contains everything you need to <em>use</em> the language model, including the type of language model, the trained parameters, and a copy of the vocabulary. Other scripts can just load the model object from the file and query it to get information like <span class="math inline"><em>p</em>(<em>z</em> ∣ <em>x</em><em>y</em>)</span> by calling its methods. They don’t need to know how the model works internally or how it was trained.</p>
+<p>You can now use your trained models to assign probabilities to new corpora using <code>./fileprob.py</code>. Type <code>./fileprob.py --help</code> to see documentation. Once you’ve familiarized yourself with the arguments, try running the script like this:</p>
+<pre><code>./fileprob.py [mymodel] ../data/gen_spam/dev/gen/*</code></pre>
+<p>where <code>[mymodel]</code> refers to the long filename above. (You may not have to type it all: try typing the start and hitting Tab, or type <code>*.model</code> if it’s the only model matching that pattern.)</p>
+<p><em>Note:</em> It may be convenient to use symbolic links (shortcuts) to avoid typing long filenames or directory names. For example,</p>
+<pre><code>ln -sr corpus=gen~vocab=vocab-genspam.txt~smoother=add_lambda~lambda=1.0.model gen</code></pre>
+<p>will make <code>gen</code> be a shortcut for the long model filename, and</p>
+<pre><code>ln -sr ../data/speech/train sptrain </code></pre>
+<p>will make <code>sptrain</code> be a shortcut to that directory, so that <code>sptrain/switchboard</code> is now a shortcut to <code>../data/speech/train/switchboard</code>.</p>
+<hr />
+<h2 id="questions-2-3.">QUESTIONS 2-3.</h2>
+<p>Copy <code>fileprob.py</code> to <code>textcat.py</code>.</p>
+<p>Modify <code>textcat.py</code> so that it does text categorization. <code>textcat.py</code> should have almost the same command-line API as <code>./fileprob.py</code>, except it should take <em>two</em> models instad of just one.</p>
+<p>You could train your language models with lines like</p>
+<pre><code>./train_lm.py vocab-genspam.txt add_lambda --lambda 1.0 gen --output gen.model
+./train_lm.py vocab-genspam.txt add_lambda --lambda 1.0 spam --output spam.model</code></pre>
+<p>which saves the trained models in a file but prints no output. You should then be able to categorize the development corpus files in question 3 like this:</p>
+<pre><code>./textcat.py gen.model spam.model 0.7 ../data/gen_spam/dev/{gen,spam}/*</code></pre>
+<p>Note that <code>LanguageModel</code> objects have a <code>vocab</code> attribute. You should do a sanity check in <code>textcat.py</code> that both language models loaded for text categorization have the same vocabulary. If not, <code>raise</code> an exception, or alternatively, just print an error message (<code>log.error</code>) and halt (<code>sys.exit(1)</code>).</p>
+<p>(It’s generally wise to include sanity checks in your code that will immediately catch problems, so that you don’t have to track down mysterious behavior. The <code>assert</code> statement is used to check statements that should be correct if your code is <em>internally</em> correct. Once your code is correct, these assertions should <em>never</em> fail. Some people even turn assertion-checking off in the final version, for speed. But even correct code may encounter conditions beyond its control; for those cases, you should <code>raise</code> an exception to warn the caller that the code couldn’t do what it was asked to do, typically because the arguments were bad or the required resources were unavailable.)</p>
+<hr />
+<h2 id="question-5.">QUESTION 5.</h2>
+<p>You want to support the <code>add_lambda_backoff</code> argument to <code>train_lm.py</code>. This makes use of <code>BackoffAddLambdaLanguageModel</code> class in <code>probs.py</code>. You will have to implement the <code>prob()</code> method in that class.</p>
+<p>Make sure that for any <span class="math inline"><em>z</em></span>, you have <span class="math inline">∑<sub><em>z</em></sub><em>p</em>(<em>z</em> ∣ <em>x</em><em>y</em>) = 1</span>, where <span class="math inline"><em>z</em></span> ranges over the whole vocabulary including OOV and EOS.</p>
+<p>As you are only adding a new model, the behavior of your old models such as <code>AddLambdaLanguageModel</code> should not change.</p>
+<hr />
+<h2 id="question-6.">QUESTION 6.</h2>
+<p>Now add the <code>sample()</code> method to <code>probs.py</code>. Did your good object-oriented programming principles suggest the best place to do this?</p>
+<p>To make <code>trigram_randsent.py</code>, start by copying <code>fileprob.py</code>. As the handout indicates, the graders should be able to call the script like this:</p>
+<pre><code>./trigram_randsent.py [mymodel] 10 --max_length 20</code></pre>
+<p>to get 10 samples of length at most 20.</p>
+<hr />
+<h2 id="question-7.">QUESTION 7.</h2>
+<p>You want to support the <code>log_linear</code> argument to <code>train_lm.py</code>. This makes use of <code>EmbeddingLogLinearLanguageModel</code> in <code>probs.py</code>. Complete that class.</p>
+<p>For part (b), you’ll need to complete the <code>train()</code> method in that class.</p>
+<p>For part (d), you want to support <code>log_linear_improved</code>. This makes use of <code>ImprovedLogLinearLanguageModel</code>, which you should complete as you see fit. It is a subclass of the LOGLIN model, so you can inherit or override methods as you like.</p>
+<p>As you are only adding new models, the behavior of your old models should not change.</p>
+<h3 id="using-vectormatrix-operations-crucial-for-speed">Using vector/matrix operations (crucial for speed!)</h3>
+<p>Training the log-linear model on <code>en.1K</code> can be done with simple “for” loops and 2D array representation of matrices. However, you’re encouraged to use PyTorch’s tensor operations, as discussed in the handout. This will reduce training time and might simplify your code.</p>
+<p><em>TA’s note:</em> “My original implementation took 22 hours per epoch. Careful vectorization of certain operations, leveraging PyTorch, brought that runtime down to 13 minutes per epoch.”</p>
+<p>Make sure to use the <code>torch.logsumexp</code> method for computing the log-denominator in the log-probability.</p>
+<h3 id="improve-the-sgd-training-loop-optional">Improve the SGD training loop (optional)</h3>
+<p>The reading handout has a section with this title.</p>
+<p>To recover Algorithm 1 (convergent SGD), you can use a modified optimizer that we provide for you in <code>SGD_convergent.py</code>:</p>
+<pre><code>from SGD_convergent import ConvergentSGD
+optimizer = ConvergentSGD(self.parameters(), gamma0=gamma0, lambda_=2*C/N)</code></pre>
+<p>To break the epoch model as suggested in the “Shuffling” subsection, check out the method <code>draw_trigrams_forever</code> in <code>probs.py</code>.</p>
+<p>For mini-batching, you could modify either <code>read_trigrams</code> or <code>draw_trigrams_forever</code>.</p>
+<hr />
+<h2 id="question-9-extra-credit">QUESTION 9 (EXTRA CREDIT)</h2>
+<p>You can use the same language models as before, without changing <code>probs.py</code> or <code>train_lm.py</code>.</p>
+<p>In this question, however, you’re back to using only one language model as in <code>fileprob</code> (not two as in <code>textcat</code>). So, initialize <code>speechrec.py</code> to a copy of <code>fileprob.py</code>, and then edit it.</p>
+<p>Modify <code>speechrec.py</code> so that, instead of evaluating the prior probability of the entire test file, it separately evaluates the prior probability of each candidate transcription in the file. It can then select the transcription with the highest <em>posterior</em> probability and report its error rate, as required.</p>
+<p>The <code>read_trigrams</code> function in <code>probs.py</code> is no longer useful, since a speech dev or test file has a special format. You don’t want to iterate over all the trigrams in such a file. You may want to make an “outer loop” utility function that iterates over the candidate transcriptions in a given speech dev or test file, along with an “inner loop” utility function that iterates over the trigrams in a given candidate transcription.</p>
+<p>(The outer loop is specialized to the speechrec format, so it probably belongs in <code>speechrec.py</code>. The inner loop is similar to <code>read_trigrams</code> and might be more generally useful, so it probably belongs in <code>probs.py</code>.)</p>
+<hr />
+<h2 id="credits">CREDITS</h2>
+<p>A version of this Python port for an earlier version of this assignment was kindly provided by Eric Perlman, a previous student in the NLP class. Thanks to Prof. Jason Baldridge at U. of Texas for updating the code and these instructions when he borrowed that assignment. They were subsequently modified for later versions of the assignment by Xuchen Yao, Mozhi Zhang, Chu-Cheng Lin, Arya McCarthy, Brian Lu, and Jason Eisner.</p>
+</body>
+</html>
