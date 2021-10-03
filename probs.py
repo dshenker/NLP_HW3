@@ -216,7 +216,7 @@ class LanguageModel:
         raise NotImplementedError(
             f"{class_name}.prob is not implemented yet (you should override LanguageModel.prob)"
         )
-
+    
     @classmethod
     def load(cls, source: Path) -> "LanguageModel":
         import pickle  # for loading/saving Python objects
