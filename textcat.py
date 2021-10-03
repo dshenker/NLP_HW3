@@ -16,9 +16,19 @@ log = logging.getLogger(Path(__file__).stem)  # Basically the only okay global v
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "model",
+        "model1",
         type=Path,
-        help="path to the trained model",
+        help="path to the trained model for generic",
+    )
+    parser.add_argument(
+        "model2",
+        type=Path,
+        help="path to the trained model for spam",
+    )
+    parser.add_argument(
+        "prior",
+        type=float,
+        help="prior probability of generic",
     )
     parser.add_argument(
         "test_files",
@@ -58,22 +68,40 @@ def main():
     logging.basicConfig(level=args.verbose)
 
     log.info("Testing...")
-    lm = LanguageModel.load(args.model)
+    lm1 = LanguageModel.load(args.model1)
+    lm2 = LanguageModel.load(args.model2)
+    prior = args.prior
+    
+
     # We use natural log for our internal computations and that's
     # the kind of log-probability that file_log_prob returns.
     # But we'd like to print a value in bits: so we convert
     # log base e to log base 2 at print time, by dividing by log(2).
 
     log.info("Per-file log-probabilities:")
-    total_log_prob = 0.0
+    
+    more_likely_gen = []
+    more_likely_spam = []
     for file in args.test_files:
-        log_prob: float = file_log_prob(file, lm)
-        print(f"{log_prob:g}\t{file}")
-        total_log_prob += log_prob
+        log_prob_gen: float = file_log_prob(file, lm1)
+        log_prob_spam: float = file_log_prob(file, lm2)        
+        log_prob_gen += math.log(prior)
+        log_prob_spam += math.log((1 - prior))
+        if (log_prob_gen > log_prob_spam):
+            more_likely_gen.append(file)
+            print("gen" + '\t' + str(file))
+        else:
+            more_likely_spam.append(file)
+            print("spam" + '\t' + str(file))
 
-    bits = -total_log_prob / math.log(2)   # convert to bits of surprisal
-    tokens = sum(num_tokens(test_file) for test_file in args.test_files)
-    print(f"Overall cross-entropy:\t{bits / tokens:.5f} bits per token")
+    num_gen = len(more_likely_gen)
+    num_spam = len(more_likely_spam)
+    num_tot = num_gen + num_spam
+    pct_gen = num_gen / num_tot * 100
+    pct_spam = num_spam / num_tot * 100
+    print(str(num_gen) + " files were more likely gen (" + str(pct_gen) + "%)")
+    print(str(num_spam) + " files were more likely spam (" + str(pct_spam) + "%)")
+    
 
 
 if __name__ == "__main__":
