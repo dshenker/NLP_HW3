@@ -29,6 +29,7 @@ from torch import nn
 from torch import optim
 from typing import Counter
 from collections import Counter
+import random
 
 log = logging.getLogger(Path(__file__).stem)  # Basically the only okay global variable.
 
@@ -216,6 +217,23 @@ class LanguageModel:
         raise NotImplementedError(
             f"{class_name}.prob is not implemented yet (you should override LanguageModel.prob)"
         )
+
+    def sample(self, max_length: int) -> str:
+        sentence = ""
+        x = "BOS"
+        y = "BOS"
+        count = 0
+        out = ""
+        vocab_list = list(self.vocab)
+        while out != "EOS" and count != max_length:
+            z_list = [self.prob(x,y,z) for z in vocab_list]
+            out = random.choices(vocab_list,z_list)[0]
+            sentence += out + " "
+            x = y
+            y = out
+            count += 1
+        print(z_list)
+        return sentence
     
     @classmethod
     def load(cls, source: Path) -> "LanguageModel":
