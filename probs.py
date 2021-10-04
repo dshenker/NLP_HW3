@@ -226,13 +226,16 @@ class LanguageModel:
         out = ""
         vocab_list = list(self.vocab)
         while out != "EOS" and count != max_length:
+            #print(x)
+            #print(y)
             z_list = [self.prob(x,y,z) for z in vocab_list]
             out = random.choices(vocab_list,z_list)[0]
+            #print(out)
             sentence += out + " "
             x = y
             y = out
             count += 1
-        print(z_list)
+        #print(z_list)
         return sentence
     
     @classmethod
@@ -292,6 +295,7 @@ class AddLambdaLanguageModel(LanguageModel):
 
     def prob(self, x: Wordtype, y: Wordtype, z: Wordtype) -> float:
         assert self.event_count[x, y, z] <= self.context_count[x, y]
+      
         return ((self.event_count[x, y, z] + self.lambda_) /
                 (self.context_count[x, y] + self.lambda_ * self.vocab_size))
 
