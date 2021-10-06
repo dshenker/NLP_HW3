@@ -226,16 +226,15 @@ class LanguageModel:
         out = ""
         vocab_list = list(self.vocab)
         while out != "EOS" and count != max_length:
-            #print(x)
-            #print(y)
+      
             z_list = [self.prob(x,y,z) for z in vocab_list]
             out = random.choices(vocab_list,z_list)[0]
-            #print(out)
+      
             sentence += out + " "
             x = y
             y = out
             count += 1
-        #print(z_list)
+
         return sentence
     
     @classmethod
@@ -431,6 +430,7 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
         nn.init.zeros_(self.Y)   # type: ignore
 
         N = num_tokens(file)
+        print(N)
         log.info("Start optimizing on {N} training tokens...")
 
         C = 1
@@ -440,16 +440,13 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
             F = 0
             for trigram in read_trigrams(file, self.vocab):
                 log_prob_trigram = self.log_prob(trigram[0],trigram[1],trigram[2])
-                regularization =  (C/N)*torch.sum(torch.square(self.X) + torch.square(self.Y))
-                
+                regularization =  (C/N)*(torch.sum(torch.square(self.X)) + torch.sum(torch.square(self.Y)))
                 F_i = log_prob_trigram - regularization
                 F += F_i
                 (-F_i).backward()
                 optimizer.step()
                 optimizer.zero_grad()
-            #(-F/N).backward()
-            #optimizer.step()
-            #optimizer.zero_grad()
+
             print("loss: ", F/N)
         #####################
         # TODO: Implement your SGD here by taking gradient steps on a sequence
