@@ -331,7 +331,23 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
         self.l2: float = l2
 
         # TODO: READ THE LEXICON OF WORD VECTORS AND STORE IT IN A USEFUL FORMAT.
-        self.dim = 99999999999  # TODO: SET THIS TO THE DIMENSIONALITY OF THE VECTORS
+        words = []
+        embeddings = []
+
+        with open(lexicon_file):
+            first_line = next(f)
+            for line in f:
+                word_embed = line.split()
+                words.append(word_embed[0])
+                embeddings.append([float(i) for i in word_embed[0]])
+
+        embed_mat = nn.zeros(len(words),len(embeddings[0]))
+        for i in range(len(words)):
+            embed_mat[i]= nn.tensor(embeddings[i])
+
+        self.embed_mat = embed_mat
+        self.vocab = words
+        self.dim = embed_mat.shape[1]  # TODO: SET THIS TO THE DIMENSIONALITY OF THE VECTORS
 
         # We wrap the following matrices in nn.Parameter objects.
         # This lets PyTorch know that these are parameters of the model
@@ -365,7 +381,25 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
         # The operator `@` is a nice way to write matrix multiplication:
         # you can write J @ K as shorthand for torch.mul(J, K).
         # J @ K looks more like the usual math notation.
-        raise NotImplementedError("Implement me!")
+        if x in self.words:
+            x_embed = self.embed_mat[self.words[x]]
+        else:
+            x_embed = self.embed_mat[self.words['OOL']]
+        
+        if y in self.words:
+            y_embed = self.embed_mat[self.words[y]]
+        else:
+            y_embed = self.embed_mat[self.words['OOL']]
+        
+        if z in self.words:
+            z_embed = self.embed_mat[self.words[z]]
+        else:
+            z_embed = self.embed_mat[self.words['OOL']]
+
+        numerator = torch.t(x_embed)@self.X@z_embed + torch.t(y_embed)@self.Y@z_embed
+        denominator = torch.t(x_embed)@self.X@torch.t(self.embed_mat) + torch.t(y_embed)@self.Y@torch.t(self.embed_mat)
+        denominator = torch.logsumexp(denominator)
+        return (numerator - denominator)
 
     def train(self, file: Path):    # type: ignore
         
@@ -390,6 +424,18 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
         N = num_tokens(file)
         log.info("Start optimizing on {N} training tokens...")
 
+        C = 1
+        epochs = 10
+
+        for i in range(epochs):
+            for trigram in read_trigrams(file):
+                log_prob_trigram = log_prob(trigram[0],trigram[1],trigram[2])
+                regularization =  (C/N)*torch.sum(torch.square(self.parameters))
+                F_i = log_prob_trigram - regularization
+                F_i.backward()
+                optim.step()
+                optim.zero_grad()
+            print("loss: ", F_i)
         #####################
         # TODO: Implement your SGD here by taking gradient steps on a sequence
         # of training examples.  Here's how to use PyTorch to make it easy:
