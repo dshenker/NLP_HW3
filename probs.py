@@ -311,7 +311,7 @@ class BackoffAddLambdaLanguageModel(AddLambdaLanguageModel):
         super().__init__(vocab, lambda_)
 
     def prob(self, x: Wordtype, y: Wordtype, z: Wordtype) -> float:
-        p_z = (self.event_count[z,] + self.lambda_) / (self.vocab_size + self.lambda_*self.vocab_size)
+        p_z = (self.event_count[z,] + self.lambda_) / (self.context_count[()] + self.lambda_*self.vocab_size)
         p_z_given_y = (self.event_count[y,z] + self.lambda_*self.vocab_size*p_z) / (self.context_count[y,] + self.lambda_*self.vocab_size)
         p_z_given_xy = (self.event_count[x,y,z] + self.lambda_*self.vocab_size*p_z_given_y) / (self.context_count[x,y] + self.lambda_*self.vocab_size)
 

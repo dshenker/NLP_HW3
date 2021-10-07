@@ -9,7 +9,7 @@ import math
 from pathlib import Path
 import matplotlib.pyplot as plt
 from probs import LanguageModel, num_tokens, read_trigrams
-
+import numpy as np
 log = logging.getLogger(Path(__file__).stem)  # Basically the only okay global variable.
 
 
@@ -82,6 +82,7 @@ def main():
     more_likely_gen = []
     more_likely_spam = []
     all_file_lengths = []
+    all_file_labels = []
     file_error_list = []
     for file in args.test_files:
         file_name = str(file)
@@ -104,10 +105,13 @@ def main():
 
         all_file_lengths.append(int(file_length))
         if (file_cat == "gen") & (log_prob_spam > log_prob_gen):
-            file_error_list.append(int(file_length))
+            #file_error_list.append(int(file_length))
+            all_file_labels.append(0)
         elif (file_cat == "spam") & (log_prob_gen > log_prob_spam):
-            file_error_list.append(int(file_length))
-
+            #file_error_list.append(int(file_length))
+            all_file_labels.append(0)
+        else:
+            all_file_labels.append(1)
     num_gen = len(more_likely_gen)
     num_spam = len(more_likely_spam)
     num_tot = num_gen + num_spam
@@ -116,7 +120,9 @@ def main():
     print(str(num_gen) + " files were more likely gen (" + str(pct_gen) + "%)")
     print(str(num_spam) + " files were more likely spam (" + str(pct_spam) + "%)")
     
-    print(len(file_error_list) / len(all_file_lengths))
+    #print(len(file_error_list) / len(all_file_lengths))
+    print(np.mean(all_file_labels))
+    print(np.corrcoef(all_file_lengths, all_file_labels))
    # plt.hist(file_error_list, bins = 50, alpha = 0.5,label = "errors")
    # plt.hist(all_file_lengths, bins = 50, alpha = 0.5, label = "number files")
    # plt.xlabel("file length")

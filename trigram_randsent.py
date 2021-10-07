@@ -60,7 +60,6 @@ def file_log_prob(file: Path, lm: LanguageModel) -> float:
         log_prob += math.log(prob)
     return log_prob
 
-
 def main():
     args = parse_args()
     logging.basicConfig(level=args.verbose)
