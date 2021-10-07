@@ -234,7 +234,9 @@ class LanguageModel:
             x = y
             y = out
             count += 1
-
+        
+        if out != "EOS":
+            sentence += "..."
         return sentence
     
     @classmethod

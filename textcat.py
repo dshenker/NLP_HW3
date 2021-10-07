@@ -7,7 +7,7 @@ import argparse
 import logging
 import math
 from pathlib import Path
-
+import matplotlib.pyplot as plt
 from probs import LanguageModel, num_tokens, read_trigrams
 
 log = logging.getLogger(Path(__file__).stem)  # Basically the only okay global variable.
@@ -81,7 +81,16 @@ def main():
     
     more_likely_gen = []
     more_likely_spam = []
+    all_file_lengths = []
+    file_error_list = []
     for file in args.test_files:
+        file_name = str(file)
+        file_name_slashes = file_name.split('/')
+        file_name_important = file_name_slashes[-1]
+        file_name_pieces = file_name_important.split('.')
+        file_cat = file_name_pieces[0]
+        file_length = file_name_pieces[1]
+        
         log_prob_gen: float = file_log_prob(file, lm1)
         log_prob_spam: float = file_log_prob(file, lm2)        
         log_prob_gen += math.log(prior)
@@ -93,6 +102,12 @@ def main():
             more_likely_spam.append(file)
             print("spam" + '\t' + str(file))
 
+        all_file_lengths.append(int(file_length))
+        if (file_cat == "gen") & (log_prob_spam > log_prob_gen):
+            file_error_list.append(int(file_length))
+        elif (file_cat == "spam") & (log_prob_gen > log_prob_spam):
+            file_error_list.append(int(file_length))
+
     num_gen = len(more_likely_gen)
     num_spam = len(more_likely_spam)
     num_tot = num_gen + num_spam
@@ -101,6 +116,19 @@ def main():
     print(str(num_gen) + " files were more likely gen (" + str(pct_gen) + "%)")
     print(str(num_spam) + " files were more likely spam (" + str(pct_spam) + "%)")
     
+    print(len(file_error_list) / len(all_file_lengths))
+   # plt.hist(file_error_list, bins = 50, alpha = 0.5,label = "errors")
+   # plt.hist(all_file_lengths, bins = 50, alpha = 0.5, label = "number files")
+   # plt.xlabel("file length")
+   # plt.ylabel("number of errors")
+   # plt.title("Relationship Between Length of File and Error Rate")
+   # plt.show()
+
+    #plt.hist(all_file_lengths)
+    #plt.xlabel("file length")
+    #plt.ylabel("number of files")
+    #plt.title("Distribution of File Lengths")
+    #plt.show()
 
 
 if __name__ == "__main__":
