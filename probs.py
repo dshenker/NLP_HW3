@@ -106,7 +106,7 @@ def read_trigrams(file: Path, vocab: Vocab) -> Iterable[Trigram]:
 
 def draw_trigrams_forever(file: Path, 
                           vocab: Vocab, 
-                          randomize: bool = False) -> Iterable[Trigram]:
+                          randomize: bool = False, batch_size: int = 1) -> Iterable[Trigram]:
     """Infinite iterator over trigrams drawn from file.  We iterate over
     all the trigrams, then do it again ad infinitum.  This is useful for 
     SGD training.  
@@ -116,15 +116,26 @@ def draw_trigrams_forever(file: Path,
     and forces us to keep all the trigrams in memory at once.
     """
     trigrams = read_trigrams(file, vocab)
+
+    batch = []
+    batch_count = 0
     if not randomize:
         import itertools
         return itertools.cycle(trigrams)  # repeat forever
     else:
         import random
-        pool = tuple(trigrams)   
-        while True:
+        pool = tuple(trigrams)
+        while batch_count < int(50/batch_size):
+            #print("na")
             for trigram in random.sample(pool, len(pool)):
-                yield trigram
+                #print("Go")
+                if len(batch) != batch_size:
+                    batch.append(trigram)
+                else:
+                    #print("bye")
+                    batch_count = batch_count + 1
+                    yield batch
+                    batch = []
 
 ##### READ IN A VOCABULARY (e.g., from a file created by build_vocab.py)
 
@@ -405,6 +416,7 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
         else:
             z_embed = self.embed_mat[self.words.index('OOL')]
 
+
         numerator = torch.t(x_embed)@self.X@z_embed + torch.t(y_embed)@self.Y@z_embed
         denominator = torch.t(x_embed)@self.X@torch.t(self.Z_mat) + torch.t(y_embed)@self.Y@torch.t(self.Z_mat)
         denominator = torch.logsumexp(denominator, 0, keepdim = False)
@@ -534,4 +546,149 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
     # * You could use a different optimization algorithm instead of SGD, such
     #   as `torch.optim.Adam` (https://pytorch.org/docs/stable/optim.html).
     #
-    pass
+    def __init__(self, vocab: Vocab, lexicon_file: Path, l2: float) -> None:
+        super().__init__(vocab,lexicon_file,l2)
+        if l2 < 0:
+            log.error(f"l2 regularization strength value was {l2}")
+            raise ValueError("You must include a non-negative regularization value")
+        self.l2: float = l2
+
+        # TODO: READ THE LEXICON OF WORD VECTORS AND STORE IT IN A USEFUL FORMAT.
+        words = []
+        embeddings = []
+
+        with open(lexicon_file) as f:
+            first_line = next(f)
+            for line in f:
+                word_embed = line.split()
+                words.append(word_embed[0])
+                embeddings.append([float(i) for i in word_embed[1:]])
+
+        embed_mat = torch.zeros(len(words),len(embeddings[0]))
+        for i in range(len(words)):
+            embed_mat[i]= torch.tensor(embeddings[i])
+
+        self.embed_mat = embed_mat
+        self.words = words
+        self.dim = embed_mat.shape[1]  # TODO: SET THIS TO THE DIMENSIONALITY OF THE VECTORS
+        
+
+        def embedding(word):
+            if word in words:
+                return self.embed_mat[self.words.index(word)]
+            else:
+                return self.embed_mat[self.words.index('OOL')]
+        
+        self.Z_mat = torch.stack([embedding(word) for word in self.vocab])
+        # We wrap the following matrices in nn.Parameter objects.
+        # This lets PyTorch know that these are parameters of the model
+        # that should be listed in self.parameters() and will be
+        # updated during training.
+        #
+        # We can also store other tensors in the model class,
+        # like constant coefficients that shouldn't be altered by
+        # training, but those wouldn't use nn.Parameter.
+        self.X = nn.Parameter(torch.zeros((self.dim, self.dim)), requires_grad=True)
+        self.Y = nn.Parameter(torch.zeros((self.dim, self.dim)), requires_grad=True)
+        #self.XYZ = nn.Parameter(torch.zeros((self.dim, 1)), requires_grad=True)
+        #self.x_OOV = nn.Parameter(torch.zeros((self.dim, 1)), requires_grad=True)
+        #self.y_OOV = nn.Parameter(torch.zeros((self.dim, 1)), requires_grad=True)
+
+    def log_prob(self, x: Wordtype, y: Wordtype, z: Wordtype) -> torch.Tensor:
+        """Return log p(z | xy) according to this language model."""
+        # TODO: IMPLEMENT ME!
+        # Don't forget that you can create additional methods
+        # that you think are useful, if you'd like.
+        # It's cleaner than making this function massive.
+        #
+        # Be sure to use vectorization over the vocabulary to
+        # compute the normalization constant Z, or this method
+        # will be very slow.
+        #
+        # The operator `@` is a nice way to write matrix multiplication:
+        # you can write J @ K as shorthand for torch.mul(J, K).
+        # J @ K looks more like the usual math notation.
+
+        z_OOV = False
+
+        if x in self.words:
+            x_embed = self.embed_mat[self.words.index(x)]
+        else:
+            x_embed = self.embed_mat[self.words.index('OOL')]
+        
+        if y in self.words:
+            y_embed = self.embed_mat[self.words.index(y)]
+        else:
+            y_embed = self.embed_mat[self.words.index('OOL')]
+        
+        if z in self.words:
+            z_embed = self.embed_mat[self.words.index(z)]
+        else:
+           # z_OOV = True
+            z_embed = self.embed_mat[self.words.index('OOL')]
+
+
+        #xyz_features = y_embed*z_embed*x_embed
+        #xyz_features_denom = (y_embed*x_embed)*self.Z_mat
+        #OOV_feature = torch.zeros((self.dim,1))
+
+        #if z_OOV:
+        #    OOV_feature = self.x_OOV*x_embed + self.y_OOV*y_embed
+
+        numerator = torch.t(x_embed)@self.X@z_embed + torch.t(y_embed)@self.Y@z_embed
+        # + self.XYZ.T@xyz_features
+        denominator = torch.t(x_embed)@self.X@torch.t(self.Z_mat) + torch.t(y_embed)@self.Y@torch.t(self.Z_mat)
+        # + (self.XYZ.T)@(xyz_features_denom.T)
+        denominator = torch.logsumexp(denominator, 0, keepdim = False)
+        
+        return (numerator - denominator)
+
+    def train(self, file: Path):    # type: ignore
+
+        gamma0 = 0.01  # initial learning rate
+
+        # This is why we needed the nn.Parameter above.
+        # The optimizer needs to know the list of parameters
+        # it should be trying to update.
+        optimizer = optim.SGD(self.parameters(), lr=gamma0)
+
+        # Initialize the parameter matrices to be full of zeros.
+        nn.init.zeros_(self.X)   # type: ignore
+        nn.init.zeros_(self.Y)   # type: ignore
+        #nn.init.zeros_(self.XYZ)
+        #nn.init.zeros_(self.y_OOV)
+        #nn.init.zeros_(self.x_OOV)
+
+        N = num_tokens(file)
+        print(N)
+        log.info("Start optimizing on {N} training tokens...")
+
+        C = 1
+        epochs = 10
+        batch_size = 1
+
+        #print("artafinde")
+        for i in range(epochs):
+            #print("elephat")
+            batch = []
+            #print("potao")
+            for batch in draw_trigrams_forever(file, self.vocab, randomize=True):
+                #print(batch)
+                F = 0
+                for trig in batch: #VECTORIZE COMPUTATION OVER MINIBATCH
+                    #print(trig)
+                    log_prob_trigram = self.log_prob(trig[0],trig[1],trig[2])
+                    # print(log_prob_trigram)
+                    regularization =  (C/N)*(torch.sum(torch.square(self.X)) + torch.sum(torch.square(self.Y))) #ADD PARAMETERS IN HERE!!!!
+                    F_i = log_prob_trigram - regularization
+                    F += F_i
+                    (-F).backward()
+                    optimizer.step()
+                    optimizer.zero_grad()
+                print("loss: ", F)
+                batch = []
+                #print("loss at epoch " + str(i) + ": ", F/len(batch))
+
+    
+    
+    
