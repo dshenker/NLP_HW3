@@ -106,7 +106,7 @@ def read_trigrams(file: Path, vocab: Vocab) -> Iterable[Trigram]:
 
 def draw_trigrams_forever(file: Path, 
                           vocab: Vocab, 
-                          randomize: bool = False, batch_size: int = 1) -> Iterable[Trigram]:
+                          randomize: bool = False, batch_size: int = 1, num_tokens: int = 1) -> Iterable[Trigram]:
     """Infinite iterator over trigrams drawn from file.  We iterate over
     all the trigrams, then do it again ad infinitum.  This is useful for 
     SGD training.  
@@ -125,17 +125,12 @@ def draw_trigrams_forever(file: Path,
     else:
         import random
         pool = tuple(trigrams)
-        while batch_count < int(2/batch_size):
-            #print("na")
-            for trigram in random.sample(pool, len(pool)):
-                #print("Go")
-                if len(batch) != batch_size:
-                    batch.append(trigram)
-                else:
-                    #print("bye")
-                    batch_count = batch_count + 1
-                    yield batch
-                    batch = []
+        while batch_count < int(num_tokens/batch_size):
+            for trigram in random.sample(pool, batch_size):
+                batch.append(trigram)
+            yield batch
+            batch_count = batch_count + 1
+            batch = []
 
 ##### READ IN A VOCABULARY (e.g., from a file created by build_vocab.py)
 
@@ -591,8 +586,6 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
         self.X = nn.Parameter(torch.zeros((self.dim, self.dim)), requires_grad=True)
         self.Y = nn.Parameter(torch.zeros((self.dim, self.dim)), requires_grad=True)
         self.XYZ = nn.Parameter(torch.zeros((self.dim, 1)), requires_grad=True)
-        #self.x_OOV = nn.Parameter(torch.zeros((self.dim, 1)), requires_grad=True)
-        #self.y_OOV = nn.Parameter(torch.zeros((self.dim, 1)), requires_grad=True)
 
     def log_prob(self, x: Wordtype, y: Wordtype, z: Wordtype) -> torch.Tensor:
         """Return log p(z | xy) according to this language model."""
@@ -630,13 +623,6 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
 
         xyz_features = y_embed*z_embed*x_embed
         xyz_features_denom = (y_embed*x_embed)*self.Z_mat
-        #OOV_feature = torch.zeros((self.dim,1))
-
-        #if z_OOV:
-        #    OOV_feature = self.x_OOV*x_embed + self.y_OOV*y_embed
-
-        # + self.XYZ.T@xyz_features
-        # + (self.XYZ.T)@(xyz_features_denom.T)
 
         numerator = torch.t(x_embed)@self.X@z_embed + torch.t(y_embed)@self.Y@z_embed + self.XYZ.T@xyz_features
         denominator = torch.t(x_embed)@self.X@torch.t(self.Z_mat) + torch.t(y_embed)@self.Y@torch.t(self.Z_mat) + (self.XYZ.T)@(xyz_features_denom.T)
@@ -645,7 +631,7 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
 
     def train(self, file: Path):    # type: ignore
 
-        gamma0 = 0.001  # initial learning rate
+        gamma0 = 0.01  # initial learning rate
 
         # This is why we needed the nn.Parameter above.
         # The optimizer needs to know the list of parameters
@@ -656,23 +642,22 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
         nn.init.zeros_(self.X)   # type: ignore
         nn.init.zeros_(self.Y)   # type: ignore
         nn.init.zeros_(self.XYZ)
-        #nn.init.zeros_(self.y_OOV)
-        #nn.init.zeros_(self.x_OOV)
 
         N = num_tokens(file)
         print(N)
         log.info("Start optimizing on {N} training tokens...")
 
         C = 1
-        epochs = 50
-        batch_size = 20
+        epochs = 10
+        batch_size = 80
         epoch_loss = 0
 
         for i in range(epochs):
             epoch_loss = 0
-            for batch in draw_trigrams_forever(file, self.vocab, randomize=True):
+            j = 0
+            for batch in draw_trigrams_forever(file, self.vocab, randomize=True, batch_size=batch_size, num_tokens=N):
                 F = 0
-                for trig in batch: #VECTORIZE COMPUTATION OVER MINIBATCH
+                for trig in batch:
                     log_prob_trigram = self.log_prob(trig[0],trig[1],trig[2])
                     regularization =  (C/N)*(torch.sum(torch.square(self.X)) + torch.sum(torch.square(self.Y)) + torch.sum(torch.square(self.XYZ))) #ADD PARAMETERS IN HERE!!!!
                     F_i = log_prob_trigram - regularization
@@ -682,6 +667,7 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
                 optimizer.zero_grad()
                 epoch_loss += F
                 batch = []
+                j += 1
             print("loss at epoch " + str(i) + ": ", epoch_loss/N)
 
     
